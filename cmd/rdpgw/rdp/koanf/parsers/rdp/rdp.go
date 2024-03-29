@@ -29,7 +29,7 @@ func (p *RDP) Unmarshal(b []byte) (map[string]interface{}, error) {
 		}
 		fields := strings.SplitN(line, ":", 3)
 		if len(fields) != 3 {
-			return nil, fmt.Errorf("malformed line %d: %q", c, line)
+			return nil, fmt.Errorf("malformed line %d: %q (%d)", c, line, len(fields))
 		}
 
 		key := strings.TrimSpace(fields[0])
@@ -37,6 +37,16 @@ func (p *RDP) Unmarshal(b []byte) (map[string]interface{}, error) {
 		val := strings.TrimSpace(fields[2])
 
 		switch t {
+		case "b":
+			intValue, err := strconv.Atoi(val)
+			if err != nil {
+				return nil, fmt.Errorf("cannot parse integer at line %d: %s", c, line)
+			}
+			if intValue != 0 {
+				mp[key] = true
+			} else {
+				mp[key] = false
+			}
 		case "i":
 			intValue, err := strconv.Atoi(val)
 			if err != nil {
@@ -46,7 +56,7 @@ func (p *RDP) Unmarshal(b []byte) (map[string]interface{}, error) {
 		case "s":
 			mp[key] = val
 		default:
-			return nil, fmt.Errorf("malformed line %d: %s", c, line)
+			return nil, fmt.Errorf("malformed line %d: %s -> %s", c, line, t)
 		}
 	}
 	return mp, nil
